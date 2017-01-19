@@ -284,6 +284,7 @@ FB;
 
             if(count($aCustomFields)>0) {
                 echo '<fieldset>';
+/*
                 foreach($aCustomFields as $field) {
                     if($field['e_type']=='DATEINTERVAL') {
                         echo '<div class="row two_input">';
@@ -297,19 +298,106 @@ FB;
                     FieldForm::meta($field, true);
                     echo '</div>';
                 }
+*/
+                $groups = array();
+
+                foreach ($aCustomFields as $field) {
+                    $order = $group = 'Otros';
+                    $name = explode('//', $field['s_name']);
+
+                    if (count($name) == 2) {
+                        $order = $group = $name[0];
+                        $field['s_name'] = $name[1];
+                    } elseif (count($name) > 2) {
+                        $order = array_shift($name);
+                        $group = array_shift($name);
+                        $field['s_name'] = implode('//', $name);
+                    }
+
+                    $slug = $field['s_slug'];
+                    $groups[$order][$group][$slug] = $field;
+                }
+
+                ksort($groups, SORT_STRING);
+
+                foreach ($groups as $group) {
+                    foreach ($group as $name => $fields) {
+                        echo '<h5>' . $name . '</h5>';
+                        ksort($fields, SORT_STRING);
+
+                        foreach ($fields as $field) {
+                            if ($field['e_type'] == 'DATEINTERVAL') {
+                                echo '<div class="row two_input">';
+                            } elseif ($field['e_type'] == 'CHECKBOX') {
+                                echo '<div class="row checkbox">';
+                            } elseif ($field['e_type'] == 'RADIO') {
+                                echo '<div class="row radio">';
+                            } else {
+                                echo '<div class="row one_input">';
+                            }
+
+                            FieldForm::meta($field, true);
+                            echo '</div>';
+                        }
+                    }
+                }
+
                 echo '</fieldset>';
             }
         }
 
         static public function meta_fields_input($catId = null, $itemId = null) {
             $fields = Field::newInstance()->findByCategoryItem($catId, $itemId);
+
             if(count($fields)>0) {
                 echo '<div class="meta_list">';
+/*
                 foreach($fields as $field) {
                     echo '<div class="meta">';
                         FieldForm::meta($field);
                     echo '</div>';
                 }
+*/
+                $groups = array();
+
+                foreach ($fields as $field) {
+                    $order = $group = 'Otros';
+                    $name = explode('//', $field['s_name']);
+
+                    if (count($name) == 2) {
+                        $order = $group = $name[0];
+                        $field['s_name'] = $name[1];
+                    } elseif (count($name) > 2) {
+                        $order = array_shift($name);
+                        $group = array_shift($name);
+                        $field['s_name'] = implode('//', $name);
+                    }
+
+                    $slug = $field['s_slug'];
+                    $groups[$order][$group][$slug] = $field;
+                }
+
+                ksort($groups, SORT_STRING);
+
+                foreach ($groups as $group) {
+                    foreach ($group as $name => $fields) {
+                        $slug = strtolower(preg_replace('~[^\pL\d]+~u', '-', $name));
+                        echo '<div class="col-md-12">';
+                        echo '<div class="page-header"><h3>' . $name . '&nbsp;<small><input type="checkbox" id="' . $slug . '" class="toggleCheck" /> Activar / desactivar todo</small></h3></div>';
+                        ksort($fields, SORT_STRING);
+
+                        foreach ($fields as $field) {
+                            echo '<div class="col-md-4">';
+                            echo '<div class="meta text-xs '.$slug.'">';
+                            FieldForm::meta($field);
+                            echo '</div>';
+                            echo '</div>';
+                        }
+
+                        echo '</div>';
+                    }
+                }
+
                 echo '</div>';
             }
         }
